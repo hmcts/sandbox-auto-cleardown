@@ -9,7 +9,7 @@ echo "This is a dry-run\nAppend --delete-expired to delete resources that are ex
 fi
 
 if [ "$1" = "--delete-expired" ]; then
-    echo "You have specified the --delete-expired flag. This will delete all resources that have whose expiresAfter tag has a value dated in the past\nRemove this flag to perform a dry-run"
+    echo "You have specified the --delete-expired flag. This will delete all resources whose expiresAfter tag has a value dated in the past\nRemove this flag to perform a dry-run"
     read -n1 -p "Do you wish to delete the expired resources? [y,n]" input 
 
     if [[ $input == "Y" || $input == "y" ]]; then
