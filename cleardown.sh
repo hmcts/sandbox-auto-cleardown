@@ -42,7 +42,7 @@ for subscription in $(echo "${subscriptions[@]}"); do
 az account set -s $subscription
 
 # get list of resources with expiresAfter tags with values dated in the past
-resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter<'$(date +"%Y-%m-%d")') && (tags.expiresAfter!='0000-00-00') && (tags.expiresAfter!='never')]")
+resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter<'$(date +"%Y-%m-%d")')]")
 
 if [ "$resources" = "[]" ]; then
     echo "No resources are expired. Nothing to delete in $subscription"
@@ -59,7 +59,7 @@ fi
     done
 
 # get list of resource groups with expiresAfter tags with values dated in the past
-groups=$(az group list --tag expiresAfter --query "[?(tags.expiresAfter<'$(date +"%Y-%m-%d")') && (tags.expiresAfter!='never')]")
+groups=$(az group list --tag expiresAfter --query "[?(tags.expiresAfter<'$(date +"%Y-%m-%d")')]")
 
 if [ "$groups" = "[]" ]; then
     echo "No resource groups are expired. Nothing to delete in $subscription"
@@ -68,7 +68,7 @@ fi
     for group in $(echo "${groups[@]}" | jq -c '.[]'); do
         
         # get list of expired resources in resource group
-        rg_resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter>'$(date +"%Y-%m-%d")') && (tags.expiresAfter!='never') && (resourceGroup=='$(echo $group | jq -r '.name')')]")
+        rg_resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter>'$(date +"%Y-%m-%d")') && (resourceGroup=='$(echo $group | jq -r '.name')')]")
         
         if [[ "$1" = "--delete-expired" && $rg_resources = "[]" ]]; then
         
