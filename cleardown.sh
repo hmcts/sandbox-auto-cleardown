@@ -77,11 +77,11 @@ fi
             # show message saying resource group cannot be deleted because it contains non-expired resources
             echo "Cannot delete resource group with id $(echo $group | jq -r '.id') as it is still contains resources that are not expired"
         elif [[ "$1" != "--delete-expired" && $rg_resources = "[]" ]]; then
-            # show empty resource groups that are expired during dry-run
-            echo "The empty resource group $(echo $group | jq -r '.name') will be deleted from the $subscription subscription"
+            # show resource groups with no non-expired resources that are expired during dry-run
+            echo "The resource group $(echo $group | jq -r '.name') contains no non-expired resources and will be deleted from the $subscription subscription"
         elif [[ "$1" != "--delete-expired" && $rg_resources != "[]" ]]; then
-            # show non-empty resource groups that are expired during dry-run
-            echo "The resource group $(echo $group | jq -r '.name') is expired but it is not empty. This resource group will not be deleted until all expired resources are deleted"
+            # show expired resource groups that contain non-expired resources during dry-run
+            echo "The resource group $(echo $group | jq -r '.name') is expired but it contains non-expired resources. This resource group will not be deleted until all resources have expired"
         fi
     done
 done
