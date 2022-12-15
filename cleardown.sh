@@ -44,7 +44,6 @@ az account set -s $subscription
 # get list of resources with expiresAfter tags with values dated in the past
 resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter<'$(date +"%Y-%m-%d")') && (tags.expiresAfter!='0000-00-00') && (tags.expiresAfter!='never')]")
 
-# used in dry-run
 if [ "$resources" = "[]" ]; then
     echo "No resources are expired. Nothing to delete in $subscription"
 fi
