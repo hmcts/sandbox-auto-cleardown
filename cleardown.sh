@@ -52,7 +52,7 @@ fi
     for resource in $(echo "${resources[@]}" | jq -c '.[]'); do
         if [ "$1" = "--delete-expired" ]; then
             echo "Now deleting resource with id $(echo $resource | jq -r '.id')"
-            # az resource delete $(echo $resource | jq -r '.id')
+            # az resource delete --ids $(echo $resource | jq -r '.id')
         else
             # show resources that are expired output during dry-run
             echo $(jq -n \
