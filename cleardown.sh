@@ -67,19 +67,28 @@ if [ "$groups" = "[]" ]; then
 fi
 
     for group in $(echo "${groups[@]}" | jq -c '.[]'); do
+        
         # get list of expired resources in resource group
         rg_resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter>'$(date +"%Y-%m-%d")') && (tags.expiresAfter!='never') && (resourceGroup=='$(echo $group | jq -r '.name')')]")
+        
         if [[ "$1" = "--delete-expired" && $rg_resources = "[]" ]]; then
+        
             # delete resource group if no non-expired resources remain
             echo "Now deleting resource group with id $(echo $group | jq -r '.id')"
             az group delete --name $(echo $group | jq -r '.name') --yes
+        
         elif [[ "$1" = "--delete-expired" && $rg_resources != "[]" ]]; then
+        
             # show message saying resource group cannot be deleted because it contains non-expired resources
             echo "Cannot delete resource group with id $(echo $group | jq -r '.id') as it is still contains resources that are not expired"
+        
         elif [[ "$1" != "--delete-expired" && $rg_resources = "[]" ]]; then
+        
             # show resource groups with no non-expired resources that are expired during dry-run
             echo "The resource group $(echo $group | jq -r '.name') contains no non-expired resources and will be deleted from the $subscription subscription"
+        
         elif [[ "$1" != "--delete-expired" && $rg_resources != "[]" ]]; then
+        
             # show expired resource groups that contain non-expired resources during dry-run
             echo "The resource group $(echo $group | jq -r '.name') is expired but it contains non-expired resources. This resource group will not be deleted until all resources have expired"
         fi
