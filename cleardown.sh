@@ -85,7 +85,7 @@ fi
         elif [[ "$1" != "--delete-expired" && $rg_resources = "[]" ]]; then
         
             # show expired resource groups that contain no non-expired resources during dry-run
-            echo "The resource group $(echo $group | jq -r '.name') contains no non-expired resources and will be deleted from the $subscription subscription"
+            echo "The resource group $(echo $group | jq -r '.name') is expired and contains no non-expired resources. It will be deleted from the $subscription subscription"
         
         elif [[ "$1" != "--delete-expired" && $rg_resources != "[]" ]]; then
         
