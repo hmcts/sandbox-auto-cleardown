@@ -54,13 +54,34 @@ fi
             echo "Now deleting resource with id $(echo $resource | jq -r '.id')"
             az resource delete --ids $(echo $resource | jq -r '.id')
         else
-            # show resources that are expired output during dry-run
-            echo $(jq -n \
-                    --arg subscription "$subscription" \
-                    --arg resourceGroup "$(echo $resource | jq -r '.resourceGroup')" \
-                    --arg name "$(echo $resource | jq -r '.name')" \
-                    --arg resourceType "$(echo $resource | jq -r '.type')" \
-                    '{subscription: $subscription, resourceGroup: $resourceGroup, resourceType: $resourceType, name: $name}' )
+            # show resources that are expired during dry-run
+            echo "The resource $(echo $resource | jq -r '.id') will be deleted from the $subscription subscription"
+        fi
+    done
+
+# get list of resource groups with expiresAfter tags with values dated in the past
+groups=$(az group list --tag expiresAfter --query "[?(tags.expiresAfter<'$(date +"%Y-%m-%d")') && (tags.expiresAfter!='never')]")
+
+if [ "$groups" = "[]" ]; then
+    echo "No resource groups are expired. Nothing to delete in $subscription"
+fi
+
+    for group in $(echo "${groups[@]}" | jq -c '.[]'); do
+        # get list of expired resources in resource group
+        rg_resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter>'$(date +"%Y-%m-%d")') && (tags.expiresAfter!='never') && (resourceGroup=='$(echo $group | jq -r '.name')')]")
+        if [[ "$1" = "--delete-expired" && $rg_resources = "[]" ]]; then
+            # delete resource group if no non-expired resources remain
+            echo "Now deleting resource group with id $(echo $group | jq -r '.id')"
+            az group delete --name $(echo $group | jq -r '.name') --yes
+        elif [[ "$1" = "--delete-expired" && $rg_resources != "[]" ]]; then
+            # show message saying resource group cannot be deleted because it contains non-expired resources
+            echo "Cannot delete resource group with id $(echo $group | jq -r '.id') as it is still contains resources that are not expired"
+        elif [[ "$1" != "--delete-expired" && $rg_resources = "[]" ]]; then
+            # show empty resource groups that are expired during dry-run
+            echo "The empty resource group $(echo $group | jq -r '.name') will be deleted from the $subscription subscription"
+        elif [[ "$1" != "--delete-expired" && $rg_resources != "[]" ]]; then
+            # show non-empty resource groups that are expired during dry-run
+            echo "The resource group $(echo $group | jq -r '.name') is expired but it is not empty. This resource group will not be deleted until all expired resources are deleted"
         fi
     done
 done
