@@ -23,7 +23,7 @@ jobs:
       - name: Running Script in Dry-Run mode
         run: ./cleardown.sh 
       - name: Complete
-        if: success()
+        if: ${{ success() }}
         run: echo Script Execution Completed !!
 
   sandbox-cleanup:
