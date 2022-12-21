@@ -16,6 +16,10 @@ jobs:
       - name: Starting
         run: echo Staring cleanup Script..
       - name: Running Script in Dry-Run mode
-        run: ./cleardown.sh
+        run: ./cleardown.sh 
+        if: ${{ github.ref.name }} != "master" && ${{ github.event.name }} == "workflow_dispatch"
+      - name: Running Script in delete mode
+        run: echo Would delete resources 
+        if: ${{ github.ref.name }} == "master"
       - name: Complete
         run: echo Script Execution Completed !!
