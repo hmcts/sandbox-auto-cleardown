@@ -18,7 +18,7 @@ jobs:
       - name: Starting
         run: |
           echo Starting cleanup Script..
-          echo "${{ github.ref.name }} != 'master' && ${{ github.event.name }} == 'workflow_dispatch' "
+          echo "${{ github.ref_name }} != 'master' && ${{ github.event_name }} == 'workflow_dispatch' "
       - name: Running Script in Dry-Run mode
         run: ./cleardown.sh 
         if: ${{ github.ref.name }} != "master" && ${{ github.event.name }} == "workflow_dispatch"
