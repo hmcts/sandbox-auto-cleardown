@@ -11,8 +11,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  dry-run:
     runs-on: ubuntu-latest
+    if: ${{ github.ref_name }} != "master" && ${{ github.event_name }} == "workflow_dispatch"
     steps:
       - uses: actions/checkout@v3
       - name: Starting
@@ -21,9 +22,27 @@ jobs:
           echo "${{ github.ref_name }} != 'master' && ${{ github.event_name }} == 'workflow_dispatch' "
       - name: Running Script in Dry-Run mode
         run: ./cleardown.sh 
-        if: ${{ github.ref.name }} != "master" && ${{ github.event.name }} == "workflow_dispatch"
+        
       - name: Running Script in delete mode
         run: echo Would delete resources 
         if: ${{ github.ref.name }} == "master"
       - name: Complete
         run: echo Script Execution Completed !!
+
+  sandbox-cleanup:
+      runs-on: ubuntu-latest
+      if: ${{ github.ref_name }} == "master"
+      steps:
+        - uses: actions/checkout@v3
+        - name: Starting
+          run: |
+            echo Starting cleanup Script..
+            echo "${{ github.ref_name }} != 'master' && ${{ github.event_name }} == 'workflow_dispatch' "
+        - name: Running Script in Dry-Run mode
+          run: ./cleardown.sh 
+          if: ${{ github.ref.name }} != "master" && ${{ github.event.name }} == "workflow_dispatch"
+        - name: Running Script in delete mode
+          run: echo Would delete resources 
+          if: ${{ github.ref.name }} == "master"
+        - name: Complete
+          run: echo Script Execution Completed !!
