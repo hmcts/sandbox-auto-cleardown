@@ -22,10 +22,8 @@ jobs:
           echo "${{ github.ref_name }} != 'master' && ${{ github.event_name }} == 'workflow_dispatch' "
       - name: Running Script in Dry-Run mode
         run: ./cleardown.sh 
-      - name: Running Script in delete mode
-        run: echo Would delete resources 
-        if: ${{ github.ref.name }} == "master"
       - name: Complete
+        if: success()
         run: echo Script Execution Completed !!
 
   sandbox-cleanup:
@@ -37,7 +35,7 @@ jobs:
           run: |
             echo Starting cleanup Script..
             echo "${{ github.ref_name }} != 'master' && ${{ github.event_name }} == 'workflow_dispatch' "
-        - name: Running Script in Dry-Run mode
+        - name: Running Script in Delete-expired mode
           run: ./cleardown.sh 
           if: ${{ github.ref.name }} != "master" && ${{ github.event.name }} == "workflow_dispatch"
         - name: Running Script in delete mode
