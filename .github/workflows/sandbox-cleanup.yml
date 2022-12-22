@@ -24,8 +24,11 @@ jobs:
         id: script
         run: ./cleardown.sh 
       - name: Completed
-        if: ${{ steps.script.conclusion == 'failure' }}
-        run: echo Script Execution Completed !!
+        if: ${{ steps.script.conclusion != 'failure' }}
+        run: | 
+          echo ${{ steps.script.conclusion }}
+          echo Script Execution Completed !!
+
       - name: Job Failed
         if: ${{ failure() }}
         run: echo One if the step failed.
