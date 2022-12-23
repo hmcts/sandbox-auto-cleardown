@@ -20,6 +20,12 @@ jobs:
         run: |
           echo Starting cleanup Script..
           echo "${{ github.ref_name }} != 'master' && ${{ github.event_name }} == 'workflow_dispatch' "
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: a195073b-b973-4117-a04e-278e0bc31f39 # Sandbox Cleanup
+          tenant-id: 531ff96d-0ae9-462a-8d2d-bec7c0b42082 # HMCTS.NET
+          allow-no-subscriptions: true
       - name: Running Script in Dry-Run mode
         id: script
         run: ./cleardown.sh 
@@ -28,7 +34,6 @@ jobs:
         run: | 
           echo ${{ steps.script.conclusion }}
           echo Script Execution Completed !!
-
       - name: Job Failed
         if: ${{ failure() }}
         run: echo One if the step failed.
