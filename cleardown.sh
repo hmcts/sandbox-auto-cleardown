@@ -30,7 +30,7 @@ extensions='[
 for extension in $(echo "${extensions[@]}" | jq -r '.[].name'); do
     AZ_EXTENSION=$(az extension list --query "[?name=='${extension}']")
     if [ "$AZ_EXTENSION" = "[]" ]; then
-        echo "\nInstalling azure cli extensions..."
+        echo -e "\nInstalling azure cli extensions $extension..."
         az extension add --name $extension
     fi
 done
