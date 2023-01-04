@@ -32,7 +32,7 @@ jobs:
 
       - name: Running Script in Dry-Run mode
         id: script
-        run: ./cleardown.sh 
+        run: ./pipeline-scripts/cleardown.sh 
       - name: Completed
         if: ${{ steps.script.conclusion != 'failure' }}
         run: | 
@@ -52,7 +52,7 @@ jobs:
             echo Starting cleanup Script..
             echo "${{ github.ref_name }} != 'master' && ${{ github.event_name }} == 'workflow_dispatch' "
         - name: Running Script in Delete-expired mode
-          run: ./cleardown.sh 
+          run: ./pipeline-scripts/cleardown.sh 
           if: ${{ github.ref.name }} == "master" && ${{ github.event.name }} != "workflow_dispatch"
         - name: Running Script in delete mode
           run: echo Would delete resources 
