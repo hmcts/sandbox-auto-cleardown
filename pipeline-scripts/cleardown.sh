@@ -2,17 +2,22 @@ oldIFS=$IFS
 IFS=$'\n'
 
 slack_bot_token=$2
-slack_channel=green_daily_checks
+# slack_channel=green_daily_checks
+slack_channel=test-notification
+
 
 # Send a notification to a slack channel informing users of resources that are close to 
 # or have been deleted. The function expects a single argument of the id of the resource being deleted.
 
 send_notification() {
-  resource_id=$1
+    resource_ids=$1
+    subscription=$2
+    
+    resource_list=$resource_ids[]
+    echo "resources to be deleted=${resource_ids[@]}"
+    printf -v message_data "{\"channel\":\"%s\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Subscription %s\nResources with the Resource IDs of \`%s\` are going to be deleted.\"}}]}" "${slack_channel}" "${subscription_id}" "${resource_ids}"
 
-  printf -v message_data "{\"channel\":\"%s\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Resource with the Resource ID of \`%s\` has been deleted.\"}}]}" "${slack_channel}" "${resource_id}"
-
-  curl -H "Content-type: application/json" \
+    curl -H "Content-type: application/json" \
     --data "$message_data" \
     -H "Authorization: Bearer ${slack_bot_token}" \
     -X POST https://slack.com/api/chat.postMessage
@@ -62,7 +67,10 @@ subscriptions=$(az account subscription list --query "[?(contains(displayName, '
 
 for subscription in $(echo "${subscriptions[@]}"); do
 
-az account set -s $subscription
+resources_to_be_deleted=()
+
+
+az account set -s "${subscription}"
 
 # get list of resources with expiresAfter tags with values dated in the past
 resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter<'$(date +"%Y-%m-%d")')]")
@@ -72,17 +80,24 @@ if [ "$resources" = "[]" ]; then
 fi
 
     for resource in $(echo "${resources[@]}" | jq -c '.[]'); do
+        resource_id=$(echo "${resource}" | jq -r '.id')
+        
         if [ "$1" = "--delete-expired" ]; then
-            resource_id=$(echo "${resource}" | jq -r '.id')
             echo "Now deleting resource with id ${resource_id}"
-            send_notification "${resource_id}"
             az resource delete --ids "${resource_id}"
+
+            resources_to_be_deleted+=("${resource_id}")
         else
             # show resources that are expired during dry-run
             echo "The resource $(echo $resource | jq -r '.id') will be deleted from the $subscription subscription"
+            resources_to_be_deleted+=("${resource_id}")
         fi
     done
 
+    if [[ ${#resources_to_be_deleted[@]} -gt 0 ]]; then
+        echo "number of resources to be be delete is: ${#resources_to_be_deleted[@]}"
+        send_notification "${resources_to_be_deleted[@]}" "${subscription}"
+    fi
 # get list of resource groups with expiresAfter tags with values dated in the past
 groups=$(az group list --tag expiresAfter --query "[?(tags.expiresAfter<'$(date +"%Y-%m-%d")')]")
 
