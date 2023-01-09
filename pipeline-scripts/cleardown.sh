@@ -1,6 +1,32 @@
 oldIFS=$IFS
 IFS=$'\n'
 
+slack_bot_token=$2
+# slack_channel=green_daily_checks
+slack_channel=test-notification
+
+
+# Send a notification to a slack channel informing users of resources that are close to 
+# or have been deleted. The function expects a single argument of the id of the resource being deleted.
+
+send_notification() {
+    resource_ids=$1
+    subscription=$2
+    
+    resource_list=$resource_ids[]
+    echo "resources to be deleted=${resource_ids[@]}"
+    printf -v message_data "{\"channel\":\"%s\",\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Subscription %s\nResources with the Resource IDs of \`%s\` are going to be deleted.\"}}]}" "${slack_channel}" "${subscription_id}" "${resource_ids}"
+
+    curl -H "Content-type: application/json" \
+    --data "$message_data" \
+    -H "Authorization: Bearer ${slack_bot_token}" \
+    -X POST https://slack.com/api/chat.postMessage
+
+}
+
+
+
+
 # by default the script will assume you want a dry-run to see what resources will be deleted
 # pass the `--delete-expired` argument to initiate terraform import
 
@@ -41,7 +67,10 @@ subscriptions=$(az account subscription list --query "[?(contains(displayName, '
 
 for subscription in $(echo "${subscriptions[@]}"); do
 
-az account set -s $subscription
+resources_to_be_deleted=()
+
+
+az account set -s "${subscription}"
 
 # get list of resources with expiresAfter tags with values dated in the past
 resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter<'$(date +"%Y-%m-%d")')]")
@@ -51,15 +80,24 @@ if [ "$resources" = "[]" ]; then
 fi
 
     for resource in $(echo "${resources[@]}" | jq -c '.[]'); do
+        resource_id=$(echo "${resource}" | jq -r '.id')
+        
         if [ "$1" = "--delete-expired" ]; then
-            echo "Now deleting resource with id $(echo $resource | jq -r '.id')"
-            az resource delete --ids $(echo $resource | jq -r '.id')
+            echo "Now deleting resource with id ${resource_id}"
+            az resource delete --ids "${resource_id}"
+
+            resources_to_be_deleted+=("${resource_id}")
         else
             # show resources that are expired during dry-run
             echo "The resource $(echo $resource | jq -r '.id') will be deleted from the $subscription subscription"
+            resources_to_be_deleted+=("${resource_id}")
         fi
     done
 
+    if [[ ${#resources_to_be_deleted[@]} -gt 0 ]]; then
+        echo "number of resources to be be delete is: ${#resources_to_be_deleted[@]}"
+        send_notification "${resources_to_be_deleted[@]}" "${subscription}"
+    fi
 # get list of resource groups with expiresAfter tags with values dated in the past
 groups=$(az group list --tag expiresAfter --query "[?(tags.expiresAfter<'$(date +"%Y-%m-%d")')]")
 
@@ -69,12 +107,12 @@ fi
 
     for group in $(echo "${groups[@]}" | jq -c '.[]'); do
         
-        # get list of non-expired resources in resource group, i.e. the expiresAfter tag is dated in the future. If this is empty then the resource group can be deleted
+        # get list of expired resources in resource group
         rg_resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter>'$(date +"%Y-%m-%d")') && (resourceGroup=='$(echo $group | jq -r '.name')')]")
         
         if [[ "$1" = "--delete-expired" && $rg_resources = "[]" ]]; then
         
-            # delete resource group if it does not contain non-expired resources
+            # delete resource group if no non-expired resources remain
             echo "Now deleting resource group with id $(echo $group | jq -r '.id')"
             az group delete --name $(echo $group | jq -r '.name') --yes
         
@@ -85,7 +123,7 @@ fi
         
         elif [[ "$1" != "--delete-expired" && $rg_resources = "[]" ]]; then
         
-            # show expired resource groups that do not contain non-expired resources during dry-run
+            # show expired resource groups that contain no non-expired resources during dry-run
             echo "The resource group $(echo $group | jq -r '.name') is expired and contains no non-expired resources. It will be deleted from the $subscription subscription"
         
         elif [[ "$1" != "--delete-expired" && $rg_resources != "[]" ]]; then

@@ -1,0 +1,61 @@
+# This is a workflow to clean sandbox environment
+
+name: sandboxCleanup
+
+# Workflow will trigger on schedule
+on:
+  pull_request:
+
+  schedule:
+    - cron: "0 2-4 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_name }} != "master" && ${{ github.event_name }} == "workflow_dispatch"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Starting
+        run: |
+          echo Starting cleanup Script..
+          echo "${{ github.ref_name }} != 'master' && ${{ github.event_name }} == 'workflow_dispatch' "
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: a195073b-b973-4117-a04e-278e0bc31f39 # Sandbox Cleanup
+          tenant-id: 531ff96d-0ae9-462a-8d2d-bec7c0b42082 # HMCTS.NET
+          allow-no-subscriptions: true
+
+      - name: Running Script in Dry-Run mode
+        id: script
+        run: ./pipeline-scripts/cleardown.sh 
+      - name: Completed
+        if: ${{ steps.script.conclusion != 'failure' }}
+        run: | 
+          echo ${{ steps.script.conclusion }}
+          echo Script Execution Completed !!
+      - name: Job Failed
+        if: ${{ failure() }}
+        run: echo One if the step failed.
+
+  sandbox-cleanup:
+      runs-on: ubuntu-latest
+      if: github.ref_name == 'master'
+      steps:
+        - uses: actions/checkout@v3
+        - name: Starting
+          run: |
+            echo Starting cleanup Script..
+            echo "${{ github.ref_name }} != 'master' && ${{ github.event_name }} == 'workflow_dispatch' "
+        - name: Running Script in Delete-expired mode
+          run: ./pipeline-scripts/cleardown.sh 
+          if: ${{ github.ref.name }} == "master" && ${{ github.event.name }} != "workflow_dispatch"
+        - name: Running Script in delete mode
+          run: echo Would delete resources 
+          if: ${{ github.ref.name }} == "master"
+        - name: Complete
+          run: echo Script Execution Completed !!
