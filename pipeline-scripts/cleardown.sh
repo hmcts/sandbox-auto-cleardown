@@ -107,7 +107,7 @@ fi
 
 if [[ "$1" ==  '--warn' ]]
 then
-    warning=$(date -v +5d +"%Y-%m-%d") # 5 days 
+    warning=$(date -d "+10 days" +"%Y-%m-%d") # 5 days 
     get_expired_resources  $warning
     for resource in "${resources_to_be_deleted[@]}"
     do
