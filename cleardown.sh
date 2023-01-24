@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 oldIFS=$IFS
 IFS=$'\n'
 
@@ -5,7 +6,7 @@ IFS=$'\n'
 # pass the `--delete-expired` argument to initiate terraform import
 
 if [ "$1" != "--delete-expired" ]; then
-echo "This is a dry-run\nAppend --delete-expired to delete resources that are expired\nResources to be deleted will show in the JSON output below"
+echo "This is a dry-run\n Append --delete-expired to delete resources that are expired\nResources to be deleted will show in the JSON output below"
 fi
 
 if [ "$1" = "--delete-expired" ]; then
