@@ -60,7 +60,7 @@ get_expired_resources() {
 ##################˜End_of_Functions˜##################
 
 # install extensions
-install_extension
+# install_extension
 
 
 # dry-run to get the list of resources that can be deleted.
