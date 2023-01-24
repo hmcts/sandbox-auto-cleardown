@@ -24,11 +24,12 @@ log() {
 
 install_extension() {
     # check required az extensions are installed
+    printf "Adding required extensions "
     for extension in $(echo "${extensions[@]}" | jq -r '.[].name'); do
         AZ_EXTENSION=$(az extension list --query "[?name=='${extension}']")
         if [ "$AZ_EXTENSION" = "[]" ]; then
             echo -e "\nInstalling azure cli extensions $extension..."
-            az extension add --name $extension
+            az extension add --name $extension -y
         fi
     done
 }
@@ -60,7 +61,7 @@ get_expired_resources() {
 ##################˜End_of_Functions˜##################
 
 # install extensions
-# install_extension
+install_extension
 
 
 # dry-run to get the list of resources that can be deleted.
