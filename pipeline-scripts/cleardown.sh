@@ -64,7 +64,6 @@ get_expired_resources() {
 # install extensions
 install_extension
 
-
 # dry-run to get the list of resources that can be deleted.
 if [[ $1 == '--dry-run' ]]
 then
