@@ -43,7 +43,7 @@ jobs:
           allow-no-subscriptions: true
       - name: Running Script
         id: script
-        run: ./pipeline-scripts/cleardown.sh --delete_resources
+        run: ./pipeline-scripts/cleardown.sh --delete_resources ${{ secrets.REGISTRYSLACKWEBHOOK }} ${{ secrets.REGISTRYSLACKWEBHOOK }}
   warn:
     runs-on: ubuntu-latest
     if: ${{ github.ref_name }} == "master" && ${{ github.event_name }} != "workflow_dispatch"
@@ -58,4 +58,4 @@ jobs:
           allow-no-subscriptions: true
       - name: Running Script
         id: script
-        run: ./pipeline-scripts/cleardown.sh --warn
+        run: ./pipeline-scripts/cleardown.sh --warn ${{ secrets.REGISTRYSLACKWEBHOOK }} ${{ secrets.REGISTRYSLACKWEBHOOK }}

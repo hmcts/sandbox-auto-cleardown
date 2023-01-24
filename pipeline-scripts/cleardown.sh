@@ -94,9 +94,7 @@ then
     subscription=$(az account show -s $(echo $resource | cut -d/ -f3) | jq -r '.name')
     log "Resourceid $resource will in deleted in subscription $subscription"
     printf "az resource delete --ids $resource --no-wait \n" # remove printf
-    if [[ $subscription != 'DTS-CFTSBOX-INTSVC' ]]; then
-        az resource delete --ids $resource --no-wait
-    fi 
+    az resource delete --ids $resource --no-wait
   
     #modify slack channel 
     curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_greendailycheck_channel
