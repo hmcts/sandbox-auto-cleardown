@@ -25,6 +25,7 @@ log() {
 install_extension() {
     # check required az extensions are installed
     printf "Adding required extensions "
+    az config set extension.use_dynamic_install=yes_without_prompt
     for extension in $(echo "${extensions[@]}" | jq -r '.[].name'); do
         AZ_EXTENSION=$(az extension list --query "[?name=='${extension}']")
         if [ "$AZ_EXTENSION" = "[]" ]; then
