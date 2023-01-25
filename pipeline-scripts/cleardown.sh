@@ -44,19 +44,34 @@ get_expired_resources() {
     for subscription in $(echo "${subscriptions[@]}"); do
         az account set -s "${subscription}"
         printf "\n%s\n" "Checking  subscription: $subscription"
-        resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter<'${current_date}')]" | jq -r '.[].id')
-        resources_to_be_deleted+=($resources)
+        resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter<'${current_date}')]")
+        while read resource 
+        do
+          if [[ -n $resource ]]
+          then
+            id=$(echo $resource | jq -r '.id' ) 
+            name=$(echo $resource | jq -r '.name' ) 
+            type=$(echo $resource | jq -r '.type' ) 
+            rg=$(echo $resource | jq -r '.resourceGroup' )
+            temptext="${id}:${name}:${type}:${rg}:${subscription}" 
+            resources_to_be_deleted+=($temptext) 
+          fi
+          
+        done <<< $(jq -c '.[]' <<< $resources)
+
         # Working on groups
         groups=$(az group list --tag expiresAfter --query "[?(tags.expiresAfter<'${current_date}')]")
         for group in $(echo "${groups[@]}" | jq -c '.[]'); do
             # get list of expired resources in resource group
             rg_resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter>'${current_date}') && (resourceGroup=='$(echo $group | jq -r '.name')')]")
             if [[  $rg_resources = "[]" ]]; then
-                resources_to_be_deleted+=($(echo $group | jq -r '.id'))
+                temptext="$(echo $group | jq -r '.id'):$(echo $group | jq -r '.name'):'Microsoft.Resources/resourceGroups':$(echo $group | jq -r '.name'):$subscription "
+                resources_to_be_deleted+=($temptext) 
             elif [[ $rg_resources != "[]" ]]; then
                 # RG contains non-expired resources
                 echo "Resource group with id $(echo $group | jq -r '.id') in subscription $subscription still contains resources that are not expired"
-                expired_group_with_resources+=($(echo $group | jq -r '.id'))
+                temptext="$(echo $group | jq -r '.id'):$(echo $group | jq -r '.name'):'Microsoft.Resources/resourceGroups':$(echo $group | jq -r '.name'):$subscription "
+                expired_group_with_resources+=($temptext)
             fi
         done  #end of rg loop
     done
@@ -91,14 +106,15 @@ then
   get_expired_resources
   for resource in "${resources_to_be_deleted[@]}"
   do
-    subscription=$(az account show -s $(echo $resource | cut -d/ -f3) | jq -r '.name')
-    log "Resourceid $resource will in deleted in subscription $subscription"
-    printf "az resource delete --ids $resource --no-wait \n" # remove printf
-    az resource delete --ids $resource --no-wait
-  
-    #modify slack channel 
-    curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_greendailycheck_channel
-
+    resourcename=$(echo $resource | cut -d: -f2)
+    subscription=$(echo $resource | cut -d: -f5)
+    rg=$(echo $resource | cut -d: -f4)
+    type=$(echo $resource | cut -d: -f3) 
+    id=$(echo $resource | cut -d: -f1) 
+    log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
+    printf "az resource delete --ids $id --no-wait \n" # remove printf
+    az resource delete --ids $id && curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  $slack_greendailycheck_channel
+    
     #curl -X POST --data-urlencode "payload={\"channel\": \"#green-daily-checks\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_greendailycheck_channel
     #curl -X POST --data-urlencode "payload={\"channel\": \"#platops-build-notices\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_platopsbuildnotices_channel
   done
@@ -111,16 +127,25 @@ then
     get_expired_resources  $warning
     for resource in "${resources_to_be_deleted[@]}"
     do
-        subscription=$(az account show -s $(echo $resource | cut -d/ -f3) | jq -r '.name')
+        resourcename=$(echo $resource | cut -d: -f2)
+        subscription=$(echo $resource | cut -d: -f5)
+        rg=$(echo $resource | cut -d: -f4)
+        type=$(echo $resource | cut -d: -f3)
         #modify slack channel 
-        curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource: $resource  in subscription $subscription will be delete in next 5 days.\", \"icon_emoji\": \":sign-warning:\"}"  $slack_greendailycheck_channel
+        curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next *5 days* \"}}]}"  $slack_greendailycheck_channel
         #curl -X POST --data-urlencode "payload={\"channel\": \"#green-daily-checks\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource: $resource   in subscription $subscription will be delete in next 5 days.\", \"icon_emoji\": \":sign-warning:\"}"  $slack_greendailycheck_channel
         #curl -X POST --data-urlencode "payload={\"channel\": \"#platops-build-notices\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource: $resource   in subscription $subscription will be delete in next 5 days.\", \"icon_emoji\": \":sign-warning:\"}"  $slack_platopsbuildnotices_channel   
     done
+    
     for group in "${expired_group_with_resources[@]}"
     do
-        subscription=$(az account show -s $(echo $resource | cut -d/ -f3) | jq -r '.name')
-        curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource Group: $resource in subscription $subscription has expired but still contains resources that are not expired.\", \"icon_emoji\": \":detective-pikachu:\"}"  $slack_greendailycheck_channel
+        
+        resourcename=$(echo $group | cut -d: -f2)
+        subscription=$(echo $group | cut -d: -f5)
+        rg=$(echo $group | cut -d: -f4)
+        type=$(echo $group | cut -d: -f3)
+        curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" ResourceGroup \`$rg\` from subscription \`$subscription\` has *expired* but still contains resources that are *not* expired. \"}}]}"  $slack_greendailycheck_channel
     done
+    
 fi
 
