@@ -6,7 +6,7 @@ name: sandboxCleanup
 on:
   pull_request:
   schedule:
-    - cron: "0 2-4 * * 1-5"
+    - cron: "0 * * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -28,9 +28,21 @@ jobs:
       - name: Running Script in Dry-Run mode
         id: script
         run: ./pipeline-scripts/cleardown.sh --dry-run 
-
+  warn:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/master' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: a195073b-b973-4117-a04e-278e0bc31f39 # Sandbox Cleanup
+          tenant-id: 531ff96d-0ae9-462a-8d2d-bec7c0b42082 # HMCTS.NET
+          allow-no-subscriptions: true
   delete-resources:
     runs-on: ubuntu-latest
+    needs: warn
     if: ${{ github.ref == 'refs/heads/master' }}
     steps:
       - name: Checkout
@@ -44,18 +56,4 @@ jobs:
       - name: Running Script
         id: script
         run: ./pipeline-scripts/cleardown.sh --delete_resources ${{ secrets.REGISTRYSLACKWEBHOOK }} ${{ secrets.REGISTRYSLACKWEBHOOK }}
-  warn:
-    runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/master' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: 'Az CLI login'
-        uses: azure/login@v1
-        with:
-          client-id: a195073b-b973-4117-a04e-278e0bc31f39 # Sandbox Cleanup
-          tenant-id: 531ff96d-0ae9-462a-8d2d-bec7c0b42082 # HMCTS.NET
-          allow-no-subscriptions: true
-      - name: Running Script
-        id: script
-        run: ./pipeline-scripts/cleardown.sh --warn ${{ secrets.REGISTRYSLACKWEBHOOK }} ${{ secrets.REGISTRYSLACKWEBHOOK }}
+        
