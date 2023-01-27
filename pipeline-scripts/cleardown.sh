@@ -109,6 +109,7 @@ then
     echo ${resource_exp_date}    
     echo ${sec_resource_date}
     echo ${sec_current_date}
+    
     echo $(((sec_resource_date - sec_current_date)/86400))   
   done
 fi
