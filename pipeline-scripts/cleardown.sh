@@ -53,7 +53,9 @@ get_expired_resources() {
             name=$(echo $resource | jq -r '.name' ) 
             type=$(echo $resource | jq -r '.type' ) 
             rg=$(echo $resource | jq -r '.resourceGroup' )
-            temptext="${id}:${name}:${type}:${rg}:${subscription}" 
+            expiresAfter=$(echo $resource | jq -r '.tags.expiresAfter' )
+            temptext="${id}:${name}:${type}:${rg}:${subscription}:${expiresAfter}" 
+            echo $temptext 
             resources_to_be_deleted+=($temptext) 
           fi
           
@@ -95,10 +97,20 @@ then
 #   echo "${#resources_to_be_deleted[@]}"
   for resource in "${resources_to_be_deleted[@]}"
   do
-    subscription=$(az account show -s $(echo $resource | cut -d/ -f3) | jq '.name')
-    printf "Resourceid \"%s\" will be deleted from subscription %s\n"  $resource $subscription
+    resourcename=$(echo $resource | cut -d: -f2)
+    subscription=$(echo $resource | cut -d: -f5)
+    rg=$(echo $resource | cut -d: -f4)
+    type=$(echo $resource | cut -d: -f3) 
+    id=$(echo $resource | cut -d: -f1) 
+    resource_exp_date=$(echo $resource | cut -d: -f6)
+    log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
+    sec_resource_date=$(date -d "$resource_exp_date" +%s)
+    sec_current_date=$(date +%s +"%Y-%m-%d") 
+    echo $(((sec_resource_date - sec_current_date)/86400))   
   done
 fi
+
+   
 
 # 
 if [[ "$1" ==  '--delete_resources' ]]
