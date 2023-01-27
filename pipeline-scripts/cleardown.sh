@@ -103,7 +103,7 @@ then
     type=$(echo $resource | cut -d: -f3) 
     id=$(echo $resource | cut -d: -f1) 
     resource_exp_date=$(echo $resource | cut -d: -f6)
-    log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
+    log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription ${resource_exp_date}"
     sec_resource_date=$(date -d "$resource_exp_date" +%s)
     sec_current_date=$(date +%s) 
     echo ${resource_exp_date}    
