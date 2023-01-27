@@ -106,6 +106,7 @@ then
     log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
     sec_resource_date=$(date -d "$resource_exp_date" +%s)
     sec_current_date=$(date +%s) 
+    echo ${resource_exp_date}    
     echo ${sec_resource_date}
     echo ${sec_current_date}
     echo $(((sec_resource_date - sec_current_date)/86400))   
