@@ -47,6 +47,7 @@ get_expired_resources() {
         resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter<'${current_date}')]")
         while read resource 
         do
+          echo ${resource}
           if [[ -n $resource ]]
           then
             id=$(echo $resource | jq -r '.id' ) 
@@ -59,7 +60,6 @@ get_expired_resources() {
             then
               resources_to_be_deleted+=($temptext)
             fi 
-            
           fi
           
         done <<< $(jq -c '.[]' <<< $resources)
@@ -148,10 +148,12 @@ then
         resource_exp_date=$(echo $resource | cut -d: -f6)
         sec_resource_date=$(date -d "$resource_exp_date" +%s)
         days=$(((sec_resource_date - sec_current_date)/86400)) 
+        echo "-----------------------+++++++"
         echo ${resource_exp_date}
         echo ${sec_resource_date}
         echo ${sec_current_date}
         echo ${days}
+        echo "-----------------------+++++++"
         #modify slack channel 
         #curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next * ${days} day(s)* \"}}]}"  $slack_greendailycheck_channel
         #curl -X POST --data-urlencode "payload={\"channel\": \"#green-daily-checks\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource: $resource   in subscription $subscription will be delete in next 5 days.\", \"icon_emoji\": \":sign-warning:\"}"  $slack_greendailycheck_channel

@@ -30,7 +30,7 @@ jobs:
         run: ./pipeline-scripts/cleardown.sh --dry-run 
   warn:
     runs-on: ubuntu-latest
-    needs: delete-resources
+    #needs: delete-resources
     #if: ${{ github.ref == 'refs/heads/master' }}
     steps:
       - name: Checkout
