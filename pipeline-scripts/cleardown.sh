@@ -126,7 +126,7 @@ then
     id=$(echo $resource | cut -d: -f1) 
     log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
     printf "az resource delete --ids $id \n" # remove printf
-    az resource delete --ids $id --verbose && curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  $slack_greendailycheck_channel
+    az resource delete --ids $id --verbose && curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":_ohmygod_:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  $slack_greendailycheck_channel
     
     #curl -X POST --data-urlencode "payload={\"channel\": \"#green-daily-checks\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_greendailycheck_channel
     #curl -X POST --data-urlencode "payload={\"channel\": \"#platops-build-notices\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_platopsbuildnotices_channel
