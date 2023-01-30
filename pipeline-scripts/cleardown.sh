@@ -54,7 +54,8 @@ get_expired_resources() {
             name=$(echo $resource | jq -r '.name' ) 
             type=$(echo $resource | jq -r '.type' ) 
             rg=$(echo $resource | jq -r '.resourceGroup' )
-            temptext="${id}:${name}:${type}:${rg}:${subscription}"
+            exp_date=$(echo $resource | jq -r '.tags.expiresAfter')
+            temptext="${id}:${name}:${type}:${rg}:${subscription}:${exp_date}"
             deny_assignments=$(az rest --method get --uri ${id}/providers/Microsoft.Authorization/denyAssignments/8a45414b-28fb-554d-a376-977483ce694c/providers/Microsoft.Authorization/denyAssignments\?api-version\=2022-04-01  | jq -r '.value[]' )
             if [[ -z ${deny_assignments} ]]
             then
