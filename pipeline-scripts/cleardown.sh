@@ -54,12 +54,12 @@ get_expired_resources() {
             type=$(echo $resource | jq -r '.type' ) 
             rg=$(echo $resource | jq -r '.resourceGroup' )
             temptext="${id}:${name}:${type}:${rg}:${subscription}"
-            echo ${id}
-            echo $(az rest --method get --uri ${id}/providers/Microsoft.Authorization/denyAssignments/8a45414b-28fb-554d-a376-977483ce694c/providers/Microsoft.Authorization/denyAssignments\?api-version\=2022-04-01  | jq -r '.value[].prop)
-            if [[ $(az rest --method get --uri ${id}/providers/Microsoft.Authorization/denyAssignments/8a45414b-28fb-554d-a376-977483ce694c/providers/Microsoft.Authorization/denyAssignments\?api-version\=2022-04-01  | jq -r '.value[].prop) ]] 
+            deny_assignments=$(az rest --method get --uri ${id}/providers/Microsoft.Authorization/denyAssignments/8a45414b-28fb-554d-a376-977483ce694c/providers/Microsoft.Authorization/denyAssignments\?api-version\=2022-04-01  | jq -r '.value[]' )
+            if [[ -z ${deny_assignments} ]]
             then
               resources_to_be_deleted+=($temptext)
-            fi
+            fi 
+            
           fi
           
         done <<< $(jq -c '.[]' <<< $resources)
@@ -71,7 +71,11 @@ get_expired_resources() {
             rg_resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter>'${current_date}') && (resourceGroup=='$(echo $group | jq -r '.name')')]")
             if [[  $rg_resources = "[]" ]]; then
                 temptext="$(echo $group | jq -r '.id'):$(echo $group | jq -r '.name'):'Microsoft.Resources/resourceGroups':$(echo $group | jq -r '.name'):$subscription "
-                resources_to_be_deleted+=($temptext) 
+                deny_assignments=$(az rest --method get --uri $(echo $group | jq -r '.id')/providers/Microsoft.Authorization/denyAssignments/8a45414b-28fb-554d-a376-977483ce694c/providers/Microsoft.Authorization/denyAssignments\?api-version\=2022-04-01  | jq -r '.value[]' )
+                if [[ -z ${deny_assignments} ]]
+                then
+                  resources_to_be_deleted+=($temptext)
+                fi 
             elif [[ $rg_resources != "[]" ]]; then
                 # RG contains non-expired resources
                 echo "Resource group with id $(echo $group | jq -r '.id') in subscription $subscription still contains resources that are not expired"
@@ -121,7 +125,7 @@ then
     type=$(echo $resource | cut -d: -f3) 
     id=$(echo $resource | cut -d: -f1) 
     log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
-    printf "az resource delete --ids $id --no-wait \n" # remove printf
+    printf "az resource delete --ids $id \n" # remove printf
     az resource delete --ids $id && curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  $slack_greendailycheck_channel
     
     #curl -X POST --data-urlencode "payload={\"channel\": \"#green-daily-checks\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_greendailycheck_channel
@@ -149,7 +153,7 @@ then
         #curl -X POST --data-urlencode "payload={\"channel\": \"#green-daily-checks\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource: $resource   in subscription $subscription will be delete in next 5 days.\", \"icon_emoji\": \":sign-warning:\"}"  $slack_greendailycheck_channel
         #curl -X POST --data-urlencode "payload={\"channel\": \"#platops-build-notices\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource: $resource   in subscription $subscription will be delete in next 5 days.\", \"icon_emoji\": \":sign-warning:\"}"  $slack_platopsbuildnotices_channel   
     done
-    
+    sleep 60 
     for group in "${expired_group_with_resources[@]}"
     do
         
