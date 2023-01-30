@@ -46,7 +46,7 @@ jobs:
         run: ./pipeline-scripts/cleardown.sh --warn ${{ secrets.REGISTRYSLACKWEBHOOK }} ${{ secrets.REGISTRYSLACKWEBHOOK }}
   delete-resources:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/master' }}
+    #if: ${{ github.ref == 'refs/heads/master' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
