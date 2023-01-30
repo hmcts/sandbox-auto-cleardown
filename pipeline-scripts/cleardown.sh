@@ -154,6 +154,7 @@ then
         echo ${sec_resource_date}
         echo ${sec_current_date}
         echo ${days}
+        echo ${$resource} 
         echo "-----------------------+++++++"
         #modify slack channel 
         #curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next * ${days} day(s)* \"}}]}"  $slack_greendailycheck_channel
