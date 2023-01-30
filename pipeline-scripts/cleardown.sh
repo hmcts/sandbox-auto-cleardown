@@ -47,7 +47,6 @@ get_expired_resources() {
         resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter<'${current_date}')]")
         while read resource 
         do
-          echo ${resource}
           if [[ -n $resource ]]
           then
             id=$(echo $resource | jq -r '.id' ) 
@@ -71,7 +70,8 @@ get_expired_resources() {
             # get list of expired resources in resource group
             rg_resources=$(az resource list --tag expiresAfter --query "[?(tags.expiresAfter>'${current_date}') && (resourceGroup=='$(echo $group | jq -r '.name')')]")
             if [[  $rg_resources = "[]" ]]; then
-                temptext="$(echo $group | jq -r '.id'):$(echo $group | jq -r '.name'):'Microsoft.Resources/resourceGroups':$(echo $group | jq -r '.name'):$subscription "
+                exp_date=$(echo $group | jq -r '.tags.expiresAfter')
+                temptext="$(echo $group | jq -r '.id'):$(echo $group | jq -r '.name'):'Microsoft.Resources/resourceGroups':$(echo $group | jq -r '.name'):$subscription:${exp_date}"
                 deny_assignments=$(az rest --method get --uri $(echo $group | jq -r '.id')/providers/Microsoft.Authorization/denyAssignments/8a45414b-28fb-554d-a376-977483ce694c/providers/Microsoft.Authorization/denyAssignments\?api-version\=2022-04-01  | jq -r '.value[]' )
                 if [[ -z ${deny_assignments} ]]
                 then
