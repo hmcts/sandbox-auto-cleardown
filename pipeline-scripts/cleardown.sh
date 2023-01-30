@@ -118,6 +118,7 @@ fi
 if [[ "$1" ==  '--delete_resources' ]]
 then
   get_expired_resources
+  failed_to_delete=()
   for resource in "${resources_to_be_deleted[@]}"
   do
     resourcename=$(echo $resource | cut -d: -f2)
@@ -128,9 +129,23 @@ then
     log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
     printf "az resource delete --ids $id \n" # remove printf
     #az resource delete --ids $id --verbose && curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":_ohmygod_:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  $slack_greendailycheck_channel
-    
+    if [[ $(az resource delete --ids $id --verbose) ]]
+    then
+      curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":_ohmygod_:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  $slack_greendailycheck_channel
+    else
+       failed_to_delete+=$resource
+    fi
     #curl -X POST --data-urlencode "payload={\"channel\": \"#green-daily-checks\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_greendailycheck_channel
     #curl -X POST --data-urlencode "payload={\"channel\": \"#platops-build-notices\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_platopsbuildnotices_channel
+  done
+  #unable to delete resources
+  for resource in "${failed_to_delete[@]}"
+  do
+    resourcename=$(echo $resource | cut -d: -f2)
+    subscription=$(echo $resource | cut -d: -f5)
+    rg=$(echo $resource | cut -d: -f4)
+    type=$(echo $resource | cut -d: -f3) 
+    curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":danger_zone:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Unable* to *Delete* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\`. \"}}]}"  $slack_greendailycheck_channel
   done
 fi
 
@@ -149,16 +164,10 @@ then
         resource_exp_date=$(echo $resource | cut -d: -f6)
         sec_resource_date=$(date -d "$resource_exp_date" +%s)
         days=$(((sec_resource_date - sec_current_date)/86400)) 
-        echo "-----------------------+++++++"
         if [[ ${days} -ge  0 ]]
         then
-        echo ${resource_exp_date}
-        echo ${sec_resource_date}
-        echo ${sec_current_date}
-        echo ${days}
-        echo ${resource} 
+          curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next * ${days} day(s)* \"}}]}"  $slack_greendailycheck_channel
         fi
-        echo "-----------------------+++++++"
         #modify slack channel 
 
         #curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next * ${days} day(s)* \"}}]}"  $slack_greendailycheck_channel
