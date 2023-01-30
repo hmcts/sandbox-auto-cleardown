@@ -30,6 +30,7 @@ jobs:
         run: ./pipeline-scripts/cleardown.sh --dry-run 
   warn:
     runs-on: ubuntu-latest
+    needs: delete-resources
     if: ${{ github.ref == 'refs/heads/master' }}
     steps:
       - name: Checkout
@@ -45,7 +46,6 @@ jobs:
         run: ./pipeline-scripts/cleardown.sh --warn ${{ secrets.REGISTRYSLACKWEBHOOK }} ${{ secrets.REGISTRYSLACKWEBHOOK }}
   delete-resources:
     runs-on: ubuntu-latest
-    needs: warn
     if: ${{ github.ref == 'refs/heads/master' }}
     steps:
       - name: Checkout
