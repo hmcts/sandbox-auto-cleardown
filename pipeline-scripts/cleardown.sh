@@ -150,13 +150,17 @@ then
         sec_resource_date=$(date -d "$resource_exp_date" +%s)
         days=$(((sec_resource_date - sec_current_date)/86400)) 
         echo "-----------------------+++++++"
+        if [[ ${days} -ge  0 ]]
+        then
         echo ${resource_exp_date}
         echo ${sec_resource_date}
         echo ${sec_current_date}
         echo ${days}
         echo ${resource} 
+        fi
         echo "-----------------------+++++++"
         #modify slack channel 
+
         #curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next * ${days} day(s)* \"}}]}"  $slack_greendailycheck_channel
         #curl -X POST --data-urlencode "payload={\"channel\": \"#green-daily-checks\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource: $resource   in subscription $subscription will be delete in next 5 days.\", \"icon_emoji\": \":sign-warning:\"}"  $slack_greendailycheck_channel
         #curl -X POST --data-urlencode "payload={\"channel\": \"#platops-build-notices\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource: $resource   in subscription $subscription will be delete in next 5 days.\", \"icon_emoji\": \":sign-warning:\"}"  $slack_platopsbuildnotices_channel   
