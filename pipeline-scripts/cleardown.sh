@@ -53,8 +53,13 @@ get_expired_resources() {
             name=$(echo $resource | jq -r '.name' ) 
             type=$(echo $resource | jq -r '.type' ) 
             rg=$(echo $resource | jq -r '.resourceGroup' )
-            temptext="${id}:${name}:${type}:${rg}:${subscription}" 
-            resources_to_be_deleted+=($temptext) 
+            temptext="${id}:${name}:${type}:${rg}:${subscription}"
+            echo ${id}
+            echo $(az rest --method get --uri ${id}/providers/Microsoft.Authorization/denyAssignments/8a45414b-28fb-554d-a376-977483ce694c/providers/Microsoft.Authorization/denyAssignments\?api-version\=2022-04-01  | jq -r '.value[].prop)
+            if [[ $(az rest --method get --uri ${id}/providers/Microsoft.Authorization/denyAssignments/8a45414b-28fb-554d-a376-977483ce694c/providers/Microsoft.Authorization/denyAssignments\?api-version\=2022-04-01  | jq -r '.value[].prop) ]] 
+            then
+              resources_to_be_deleted+=($temptext)
+            fi
           fi
           
         done <<< $(jq -c '.[]' <<< $resources)
