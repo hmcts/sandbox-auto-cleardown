@@ -127,7 +127,8 @@ then
     type=$(echo $resource | cut -d: -f3) 
     id=$(echo $resource | cut -d: -f1) 
     log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
-    printf "az resource delete --ids $id \n" # remove printf
+    #printf "az resource delete --ids $id \n" # remove printf
+    sleep 30
     az resource delete --ids $id --verbose && curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":_ohmygod_:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  $slack_greendailycheck_channel 
     if [[ $? -ne 0 ]]
     then
@@ -144,6 +145,7 @@ then
     subscription=$(echo $resource | cut -d: -f5)
     rg=$(echo $resource | cut -d: -f4)
     type=$(echo $resource | cut -d: -f3)
+    sleep 30
     log "Error: Unable to delete Resourcename $resourcename of type $type in ResourceGroup $rg from subscription $subscription \n" 
     curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":danger_zone:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Unable* to *Delete* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\`. \"}}]}"  $slack_greendailycheck_channel
   done
@@ -155,6 +157,7 @@ then
     warning=$(date -d "+5 days" +"%Y-%m-%d") # 5 days
     sec_current_date=$(date +%s -d $(date +"%Y-%m-%d"))  
     get_expired_resources  $warning
+    sleep 60
     for resource in "${resources_to_be_deleted[@]}"
     do
         resourcename=$(echo $resource | cut -d: -f2)
