@@ -157,7 +157,7 @@ then
     warning=$(date -d "+5 days" +"%Y-%m-%d") # 5 days
     sec_current_date=$(date +%s -d $(date +"%Y-%m-%d"))  
     get_expired_resources  $warning
-    sleep 60
+    sleep 300
     for resource in "${resources_to_be_deleted[@]}"
     do
         resourcename=$(echo $resource | cut -d: -f2)
