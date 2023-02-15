@@ -3,8 +3,7 @@
 ##################˜Variables˜##################
 oldIFS=$IFS
 IFS=$'\n'
-slack_greendailycheck_channel=$2
-slack_platopsbuildnotices_channel=$3
+slack_sandbox-cleardown_channel=$2
 resources_to_be_deleted=()
 expired_group_with_resources=()
 extensions='[
@@ -16,7 +15,7 @@ extensions='[
 ##################˜Functions˜##################
 
 function usage() {
-  echo 'Usage: ./cleardown.sh <--dry_run | --warn | --delete_resources>  <slack_webhook_for_green_daily_check_channel> <slack_webhook_for_platops_build_notices_channel>'
+  echo 'Usage: ./cleardown.sh <--dry_run | --warn | --delete_resources>  <slack_webhook_for_sandbox-cleardown_channel> >'
 }
 
 log() {
@@ -129,14 +128,13 @@ then
     log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
     #printf "az resource delete --ids $id \n" # remove printf
     sleep 30
-    az resource delete --ids $id --verbose && curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":_ohmygod_:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  $slack_greendailycheck_channel 
+    az resource delete --ids $id --verbose && curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":_ohmygod_:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  $slack_sandbox-cleardown_channel
     if [[ $? -ne 0 ]]
     then
       failed_to_delete+=($resource)
       echo ${#failed_to_delete[@]}
     fi
-    #curl -X POST --data-urlencode "payload={\"channel\": \"#green-daily-checks\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_greendailycheck_channel
-    #curl -X POST --data-urlencode "payload={\"channel\": \"#platops-build-notices\", \"username\": \"sandbox-auto-cleardown\", \"text\": \"Deleted Resource: $resource  in subscription $subscription .\", \"icon_emoji\": \":tim-webster:\"}"   $slack_platopsbuildnotices_channel
+    
   done
   #unable to delete resources
   for resource in "${failed_to_delete[@]}"
@@ -147,7 +145,7 @@ then
     type=$(echo $resource | cut -d: -f3)
     sleep 30
     log "Error: Unable to delete Resourcename $resourcename of type $type in ResourceGroup $rg from subscription $subscription \n" 
-    curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":danger_zone:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Unable* to *Delete* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\`. \"}}]}"  $slack_greendailycheck_channel
+    curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":danger_zone:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Unable* to *Delete* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\`. \"}}]}"  $slack_sandbox-cleardown_channel
   done
 fi
 
@@ -169,13 +167,9 @@ then
         days=$(((sec_resource_date - sec_current_date)/86400)) 
         if [[ ${days} -ge  1 ]]
         then
-          curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":warning_triangle:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next * ${days} day(s)* \"}}]}"  $slack_greendailycheck_channel
+          curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":warning_triangle:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next * ${days} day(s)* \"}}]}"  $slack_sandbox-cleardown_channel
         fi
-        #modify slack channel 
-
-        #curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":sign-warning:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next * ${days} day(s)* \"}}]}"  $slack_greendailycheck_channel
-        #curl -X POST --data-urlencode "payload={\"channel\": \"#green-daily-checks\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource: $resource   in subscription $subscription will be delete in next 5 days.\", \"icon_emoji\": \":sign-warning:\"}"  $slack_greendailycheck_channel
-        #curl -X POST --data-urlencode "payload={\"channel\": \"#platops-build-notices\", \"username\": \"sandbox-auto-cleardown\", \"text\": \" Resource: $resource   in subscription $subscription will be delete in next 5 days.\", \"icon_emoji\": \":sign-warning:\"}"  $slack_platopsbuildnotices_channel   
+        
     done
     sleep 60 
     for group in "${expired_group_with_resources[@]}"
@@ -184,7 +178,7 @@ then
         subscription=$(echo $group | cut -d: -f5)
         rg=$(echo $group | cut -d: -f4)
         type=$(echo $group | cut -d: -f3)
-        curl -X POST --data-urlencode "payload={\"channel\": \"#slack_msg_format_testing\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":detective-pikachu:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" ResourceGroup \`$rg\` from subscription \`$subscription\` has *expired* but still contains resources that are *not* expired. \"}}]}"  $slack_greendailycheck_channel
+        curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":detective-pikachu:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" ResourceGroup \`$rg\` from subscription \`$subscription\` has *expired* but still contains resources that are *not* expired. \"}}]}"  $slack_sandbox-cleardown_channel
     done
     
 fi
