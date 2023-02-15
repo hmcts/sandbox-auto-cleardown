@@ -5,8 +5,8 @@ name: sandboxCleanup
 # Workflow will trigger on schedule
 on:
   pull_request:
-  #schedule:
-    #- cron: "0 3 * * 1-5"
+  schedule:
+    - cron: "0 3 * * 1-5"
   workflow_dispatch:
 
 permissions:
@@ -43,7 +43,7 @@ jobs:
           allow-no-subscriptions: true
       - name: Running Script
         id: script
-        run: ./pipeline-scripts/cleardown.sh --warn ${{ secrets.REGISTRYSLACKWEBHOOK }} ${{ secrets.REGISTRYSLACKWEBHOOK }}
+        run: ./pipeline-scripts/cleardown.sh --warn ${{ secrets.REGISTRYSLACKWEBHOOK }}
   delete-resources:
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/master' }}
@@ -58,5 +58,5 @@ jobs:
           allow-no-subscriptions: true
       - name: Running Script
         id: script
-        run: ./pipeline-scripts/cleardown.sh --delete_resources ${{ secrets.REGISTRYSLACKWEBHOOK }} ${{ secrets.REGISTRYSLACKWEBHOOK }}
+        run: ./pipeline-scripts/cleardown.sh --delete_resources ${{ secrets.REGISTRYSLACKWEBHOOK }}
         
