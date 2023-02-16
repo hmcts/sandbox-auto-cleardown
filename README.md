@@ -10,13 +10,16 @@ Any resources that have an `expiresAfter` tag value dated in the past, based on 
 
 This ensures resources that are not required long term are removed.
 
-expiresAfter
-In the Sandbox environment resources must be tagged with an end date after which they are no longer needed. They will then be automatically deleted after this date.
+### `expiresAfter`
 
-By default a tag will be added as now() + 30 days.
+In the Sandbox environment resources must be tagged with an end date after which they are no longer needed.
+They will then be automatically deleted after this date.
+
+By default a tag will be added as `now() + 30 days`.
 
 You can customise this by setting an explicit date:
 
+```terraform
 module "tags" {
   source      = "git::https://github.com/hmcts/terraform-module-common-tags.git?ref=master"
   environment = var.env
@@ -24,8 +27,11 @@ module "tags" {
   builtFrom   = var.builtFrom
   expiresAfter = "2023-01-01" # YYYY-MM-DD
 }
+```
+
 Or by setting it to never expire with a date far into the future:
 
+```terraform
 module "tags" {
   source      = "git::https://github.com/hmcts/terraform-module-common-tags.git?ref=master"
   environment = var.env
@@ -33,3 +39,4 @@ module "tags" {
   builtFrom   = var.builtFrom
   expiresAfter = "3000-01-01" # never expire
 }
+```
