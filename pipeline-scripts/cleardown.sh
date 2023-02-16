@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#set -e
+set -x
 ##################˜Variables˜##################
 oldIFS=$IFS
 IFS=$'\n'
@@ -15,7 +15,7 @@ extensions='[
 ##################˜Functions˜##################
 
 function usage() {
-  echo 'Usage: ./cleardown.sh <--dry_run | --warn | --delete_resources>  <slack_webhook_for_sandbox-cleardown_channel> >'
+  echo 'Usage: ./pipeline-scripts/cleardown.sh <--dry_run | --warn | --delete_resources>  <slack_webhook_for_sandbox-cleardown_channel> >'
 }
 
 log() {
@@ -88,7 +88,7 @@ get_expired_resources() {
 
 ##################˜End_of_Functions˜##################
 
-if [[ "$1" ==  '--delete_resources' ]] && [[ $# -ne 3 ]] ||  [[ "$1" ==  '--warn' ]] && [[ $# -ne 3 ]] 
+if [[ "$1" ==  '--delete_resources' ]] && [[ $# -ne 2 ]] ||  [[ "$1" ==  '--warn' ]] && [[ $# -ne 2 ]] 
 then
     usage
     exit 1
