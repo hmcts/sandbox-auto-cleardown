@@ -3,7 +3,7 @@ set -x
 ##################˜Variables˜##################
 oldIFS=$IFS
 IFS=$'\n'
-slack_sandbox-cleardown_channel=$2
+slack_channel=$2
 resources_to_be_deleted=()
 expired_group_with_resources=()
 extensions='[
@@ -128,7 +128,7 @@ then
     log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
     #printf "az resource delete --ids $id \n" # remove printf
     sleep 30
-    az resource delete --ids $id --verbose && curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":_ohmygod_:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  $slack_sandbox-cleardown_channel
+    az resource delete --ids $id --verbose && curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":_ohmygod_:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  ${slack_channel}
     if [[ $? -ne 0 ]]
     then
       failed_to_delete+=($resource)
@@ -145,7 +145,7 @@ then
     type=$(echo $resource | cut -d: -f3)
     sleep 30
     log "Error: Unable to delete Resourcename $resourcename of type $type in ResourceGroup $rg from subscription $subscription \n" 
-    curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":danger_zone:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Unable* to *Delete* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\`. \"}}]}"  $slack_sandbox-cleardown_channel
+    curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":danger_zone:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Unable* to *Delete* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\`. \"}}]}"  ${slack_channel}
   done
 fi
 
@@ -167,7 +167,7 @@ then
         days=$(((sec_resource_date - sec_current_date)/86400)) 
         if [[ ${days} -ge  1 ]]
         then
-          curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":warning_triangle:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next * ${days} day(s)* \"}}]}"  $slack_sandbox-cleardown_channel
+          curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":warning_triangle:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` will be *deleted* in next * ${days} day(s)* \"}}]}"  ${slack_channel}
         fi
         
     done
@@ -178,7 +178,7 @@ then
         subscription=$(echo $group | cut -d: -f5)
         rg=$(echo $group | cut -d: -f4)
         type=$(echo $group | cut -d: -f3)
-        curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":detective-pikachu:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" ResourceGroup \`$rg\` from subscription \`$subscription\` has *expired* but still contains resources that are *not* expired. \"}}]}"  $slack_sandbox-cleardown_channel
+        curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":detective-pikachu:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" ResourceGroup \`$rg\` from subscription \`$subscription\` has *expired* but still contains resources that are *not* expired. \"}}]}"  ${slack_channel}
     done
     
 fi
