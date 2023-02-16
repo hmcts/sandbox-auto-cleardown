@@ -137,6 +137,7 @@ then
     
   done
   #unable to delete resources
+  sleep 200
   for resource in "${failed_to_delete[@]}"
   do
     resourcename=$(echo $resource | cut -d: -f2)
