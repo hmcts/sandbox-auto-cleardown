@@ -40,3 +40,16 @@ module "tags" {
   expiresAfter = "3000-01-01" # never expire
 }
 ```
+
+###  Sandbox Cleardown Channel
+The '#sandbox-cleardown' slack channel has been created to post warning messages and on resources that are scheduled to be cleared down in the sandbox environment.
+
+Once a resource has been deleted, an alert will posted in the channel.
+
+See timelines below:
+
+| Alert Type | Timeline |
+|-|-|
+| Resource will be Deleted | 5 days prior until day of deletion |
+| Deleted Resource | Day of deletion |
+| Unable to Delete Resource | Day of deletion |
