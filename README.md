@@ -10,7 +10,7 @@ Any resources that have an `expiresAfter` tag value dated in the past, based on 
 
 This ensures resources that are not required long term are removed.
 
-### `expiresAfter`
+### expiresAfter
 
 In the Sandbox environment resources must be tagged with an end date after which they are no longer needed.
 They will then be automatically deleted after this date.
