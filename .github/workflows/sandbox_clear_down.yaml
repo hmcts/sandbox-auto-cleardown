@@ -1,6 +1,6 @@
 # This is a workflow to clean sandbox environment
 
-name: sandboxCleanup
+name: 'sandbox-cleanup'
 
 # Workflow will trigger on schedule
 on:
