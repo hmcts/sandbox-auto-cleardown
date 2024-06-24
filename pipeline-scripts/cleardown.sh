@@ -133,7 +133,8 @@ then
     if [[ $? -ne 0 ]]
     then
       failed_to_delete+=($resource)
-      messages+=("$message")
+      error_message=$(echo "$message" | awk '/Message:/ {print substr($0, index($0,$2))}')
+      messages+=("$error_message")
       echo ${#failed_to_delete[@]}
     fi
     
