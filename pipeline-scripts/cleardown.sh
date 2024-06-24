@@ -140,7 +140,6 @@ then
   done
   #List resources that failed to get deleted
   # sleep 300
-  count=0
   for resource in "${failed_to_delete[@]}"
   do
     resourcename=$(echo $resource | cut -d: -f2)
@@ -149,8 +148,7 @@ then
     type=$(echo $resource | cut -d: -f3)
     # sleep 30
     log "Error: Unable to delete Resourcename $resourcename of type $type in ResourceGroup $rg from subscription $subscription \n" 
-    curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":danger_zone:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Unable* to *Delete* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\`. \n *Error Message:*   \`$messages[$count]\`  \"}}]}"  ${slack_channel}
-    count=$((count + 1))
+    curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":danger_zone:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Unable* to *Delete* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\`. \n *Error Message:*   \`$messages[$resource]\`  \"}}]}"  ${slack_channel}
   done
 fi
 
