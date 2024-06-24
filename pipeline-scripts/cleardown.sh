@@ -128,7 +128,7 @@ then
     id=$(echo $resource | cut -d: -f1) 
     log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
     #printf "az resource delete --ids $id \n" # remove printf
-    # sleep 30
+    sleep 30
     message=""
     message=$(az resource delete --ids $id --verbose 2>&1 && curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":_ohmygod_:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  ${slack_channel})
     if [[ $? -ne 0 ]]
@@ -142,15 +142,14 @@ then
     
   done
   #List resources that failed to get deleted
-  # sleep 300
-  count=1
+  sleep 300
+  count=0
   for resource in "${failed_to_delete[@]}"
   do
     resourcename=$(echo $resource | cut -d: -f2)
     subscription=$(echo $resource | cut -d: -f5)
     rg=$(echo $resource | cut -d: -f4)
     type=$(echo $resource | cut -d: -f3)
-    # sleep 30
     log "Error: Unable to delete Resourcename $resourcename of type $type in ResourceGroup $rg from subscription $subscription \n" 
     curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":danger_zone:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Unable* to *Delete* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\`. \n *Error Message:*   ${messages[$count]}  \"}}]}"  ${slack_channel}
     count=$((count + 1))
