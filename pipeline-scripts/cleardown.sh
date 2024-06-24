@@ -129,6 +129,7 @@ then
     log "Resourceid $resourcename of type $type in ResourceGroup $rg will be deleted from subscription $subscription"
     #printf "az resource delete --ids $id \n" # remove printf
     # sleep 30
+    message=""
     message=$(az resource delete --ids $id --verbose 2>&1 && curl -X POST --data-urlencode "payload={\"channel\": \"#sandbox-cleardown\", \"username\": \"sandbox-auto-cleardown\", \"icon_emoji\": \":_ohmygod_:\",  \"blocks\": [{ \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \" *Deleted* Resource \`$resourcename\` of Type \`$type\` in ResourceGroup \`$rg\` from subscription \`$subscription\` \"}}]}"  ${slack_channel})
     if [[ $? -ne 0 ]]
     then
