@@ -134,6 +134,7 @@ then
     if [[ $? -ne 0 ]]
     then
       failed_to_delete+=($resource)
+      error_message=""
       error_message=$(echo "$message" | awk '/Message:/ {print substr($0, index($0,$2))}')
       messages+=("$error_message")
       echo ${#failed_to_delete[@]}
@@ -142,7 +143,7 @@ then
   done
   #List resources that failed to get deleted
   # sleep 300
-  count=0
+  count=1
   for resource in "${failed_to_delete[@]}"
   do
     resourcename=$(echo $resource | cut -d: -f2)
